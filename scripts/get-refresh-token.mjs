@@ -7,8 +7,8 @@
 import { createServer } from 'http';
 import { exec } from 'child_process';
 
-const CLIENT_ID = 'ISI_CLIENT_ID_KAMU';
-const CLIENT_SECRET = 'ISI_CLIENT_SECRET_KAMU';
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? 'ISI_CLIENT_ID_KAMU';
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET ?? 'ISI_CLIENT_SECRET_KAMU';
 const REDIRECT_URI = 'http://localhost:5173/auth/callback';
 const PORT = 5173;
 
