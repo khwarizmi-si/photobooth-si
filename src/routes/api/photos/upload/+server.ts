@@ -13,7 +13,7 @@ interface PhotoMetadata {
 function generateFileName(): string {
 	const now = new Date();
 	const ts = now.toISOString().replace(/[-:T]/g, '').slice(0, 15);
-	return `WISUDA_${ts}_FOTO_${Date.now()}`;
+	return `GUMURUH_${ts}_FOTO_${Date.now()}`;
 }
 
 function getDatePath(): string {
@@ -30,10 +30,9 @@ function base64ToBuffer(base64: string): Uint8Array {
 }
 
 export const POST: RequestHandler = async ({ request, platform, locals }) => {
-
 	const env = platform?.env;
-	const bucket = env?.PHOTO_BUCKET;
-	const kv = env?.WISUDA_KV;
+	const bucket = env?.GUMURUH_BUCKET;
+	const kv = env?.GUMURUH_KV;
 
 	if (!bucket) {
 		return new Response(JSON.stringify({ error: 'R2 bucket not configured' }), { status: 500 });
@@ -64,7 +63,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 		const originalUrls: string[] = [];
 		if (original_photos && original_photos.length > 0) {
 			for (let i = 0; i < original_photos.length; i++) {
-				const key = `${datePath}/original/${fileName}_${i + 1}.jpg`;
+				const key = `photos/${datePath}/original/${fileName}_${i + 1}.jpg`;
 				const buffer = base64ToBuffer(original_photos[i]);
 				await bucket.put(key, buffer, {
 					httpMetadata: { contentType: 'image/jpeg' }
@@ -74,7 +73,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 		}
 
 		// Upload framed photo
-		const framedKey = `${datePath}/framed/${fileName}_frame.jpg`;
+		const framedKey = `photos/${datePath}/framed/${fileName}_frame.jpg`;
 		const framedBuffer = base64ToBuffer(framed_photo);
 		await bucket.put(framedKey, framedBuffer, {
 			httpMetadata: { contentType: 'image/jpeg' }
@@ -82,7 +81,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 		const framedUrl = `/api/photos/view/${framedKey}`;
 
 		// Upload thumbnail
-		const thumbKey = `${datePath}/thumb/${fileName}_thumb.jpg`;
+		const thumbKey = `photos/${datePath}/thumb/${fileName}_thumb.jpg`;
 		const thumbBuffer = base64ToBuffer(thumbnail);
 		await bucket.put(thumbKey, thumbBuffer, {
 			httpMetadata: { contentType: 'image/jpeg' }
@@ -95,7 +94,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 			original_urls: originalUrls,
 			framed_url: framedUrl,
 			thumbnail_url: thumbUrl,
-			created_by: locals.user?.username ?? 'wisudawan',
+			created_by: locals.user?.username ?? 'peserta',
 			created_at: new Date().toISOString(),
 			frame_used
 		};

@@ -2,7 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 
 // GET — get active frame (public)
 export const GET: RequestHandler = async ({ platform }) => {
-	const kv = platform?.env?.WISUDA_KV;
+	const kv = platform?.env?.GUMURUH_KV;
 	if (!kv) {
 		return new Response(JSON.stringify({ error: 'KV not configured' }), {
 			status: 500,
@@ -27,7 +27,7 @@ export const PUT: RequestHandler = async ({ request, platform, locals }) => {
 		);
 	}
 
-	const kv = platform?.env?.WISUDA_KV;
+	const kv = platform?.env?.GUMURUH_KV;
 	if (!kv) return new Response(JSON.stringify({ error: 'KV not configured' }), { status: 500 });
 
 	const { key } = (await request.json()) as { key: string };
@@ -50,7 +50,7 @@ export const DELETE: RequestHandler = async ({ platform, locals }) => {
 		);
 	}
 
-	const kv = platform?.env?.WISUDA_KV;
+	const kv = platform?.env?.GUMURUH_KV;
 	if (!kv) return new Response(JSON.stringify({ error: 'KV not configured' }), { status: 500 });
 
 	await kv.delete('active_frame');

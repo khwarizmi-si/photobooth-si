@@ -17,7 +17,7 @@ export const PUT: RequestHandler = async ({ request, platform, locals }) => {
 		);
 	}
 
-	const kv = platform?.env?.WISUDA_KV;
+	const kv = platform?.env?.GUMURUH_KV;
 	if (!kv) {
 		return new Response(
 			JSON.stringify({ error: 'KV not configured' }),
@@ -35,15 +35,15 @@ export const PUT: RequestHandler = async ({ request, platform, locals }) => {
 
 	// Get users dari KV
 	const storedUsers = await kv.get('users', { type: 'json' }) as Record<string, User> | null;
-	if (!storedUsers || !storedUsers['wisudawan']) {
+	if (!storedUsers || !storedUsers['peserta']) {
 		return new Response(
 			JSON.stringify({ error: 'User not found' }),
 			{ status: 404, headers: { 'Content-Type': 'application/json' } }
 		);
 	}
 
-	// Update photo_enabled untuk user wisudawan
-	storedUsers['wisudawan'].photo_enabled = photo_enabled;
+	// Update photo_enabled untuk user peserta
+	storedUsers['peserta'].photo_enabled = photo_enabled;
 	await kv.put('users', JSON.stringify(storedUsers));
 
 	return new Response(

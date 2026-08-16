@@ -12,7 +12,7 @@ interface PhotoMetadata {
 
 // GET - Get photo by ID
 export const GET: RequestHandler = async ({ params, platform }) => {
-	const kv = platform?.env?.WISUDA_KV;
+	const kv = platform?.env?.GUMURUH_KV;
 	if (!kv) {
 		return new Response(JSON.stringify({ error: 'KV not configured' }), { status: 500 });
 	}
@@ -35,8 +35,8 @@ export const DELETE: RequestHandler = async ({ params, platform, locals }) => {
 		return new Response(JSON.stringify({ error: 'Unauthorized - Admin only' }), { status: 403 });
 	}
 
-	const kv = platform?.env?.WISUDA_KV;
-	const bucket = platform?.env?.PHOTO_BUCKET;
+	const kv = platform?.env?.GUMURUH_KV;
+	const bucket = platform?.env?.GUMURUH_BUCKET;
 
 	if (!kv) {
 		return new Response(JSON.stringify({ error: 'KV not configured' }), { status: 500 });
@@ -55,9 +55,9 @@ export const DELETE: RequestHandler = async ({ params, platform, locals }) => {
 	if (bucket) {
 		const datePath = photo.created_at.slice(0, 10).replace(/-/g, '/');
 		const keys = [
-			`${datePath}/framed/${photo.id}_frame.jpg`,
-			`${datePath}/thumb/${photo.id}_thumb.jpg`,
-			...photo.original_urls.map((_, i) => `${datePath}/original/${photo.id}_${i + 1}.jpg`)
+			`photos/${datePath}/framed/${photo.id}_frame.jpg`,
+			`photos/${datePath}/thumb/${photo.id}_thumb.jpg`,
+			...photo.original_urls.map((_, i) => `photos/${datePath}/original/${photo.id}_${i + 1}.jpg`)
 		];
 
 		await Promise.all(keys.map((key) => bucket.delete(key).catch(() => {})));

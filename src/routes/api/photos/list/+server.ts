@@ -11,7 +11,7 @@ interface PhotoMetadata {
 }
 
 export const GET: RequestHandler = async ({ platform, url }) => {
-	const kv = platform?.env?.WISUDA_KV;
+	const kv = platform?.env?.GUMURUH_KV;
 	if (!kv) {
 		return new Response(JSON.stringify({ photos: [], total: 0 }), {
 			headers: { 'Content-Type': 'application/json' }

@@ -9,14 +9,14 @@ export const load: PageServerLoad = async (event) => {
 		throw redirect(302, '/');
 	}
 
-	const bucket = platform?.env?.FRAME_BUCKET;
-	const kv = platform?.env?.WISUDA_KV;
+	const bucket = platform?.env?.GUMURUH_BUCKET;
+	const kv = platform?.env?.GUMURUH_KV;
 
 	const activeFrame = (await kv?.get('active_frame')) ?? null;
 
 	if (!bucket) return { frames: [], activeFrame };
 
-	const list = await bucket.list();
+	const list = await bucket.list({ prefix: 'frames/' });
 	const frames = list.objects.map((obj) => ({
 		key: obj.key,
 		size: obj.size,

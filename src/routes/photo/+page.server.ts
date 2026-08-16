@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
-	const kv = platform?.env?.WISUDA_KV;
+	const kv = platform?.env?.GUMURUH_KV;
 
 	// Cek global photo_enabled flag (dari KV)
 	let photoEnabled = true;
@@ -11,16 +11,16 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 				string,
 				{ photo_enabled?: boolean }
 			> | null;
-			photoEnabled = storedUsers?.['wisudawan']?.photo_enabled ?? true;
+			photoEnabled = storedUsers?.['peserta']?.photo_enabled ?? true;
 		} catch {
 			photoEnabled = true;
 		}
 	}
 
-	const bucket = platform?.env?.FRAME_BUCKET;
+	const bucket = platform?.env?.GUMURUH_BUCKET;
 	let frames: Array<{ key: string }> = [];
 	if (bucket) {
-		const list = await bucket.list();
+		const list = await bucket.list({ prefix: 'frames/' });
 		frames = list.objects.map((o) => ({ key: o.key }));
 	}
 

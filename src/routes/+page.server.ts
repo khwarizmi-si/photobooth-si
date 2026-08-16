@@ -8,7 +8,7 @@ interface KVUser {
 }
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
-	const kv = platform?.env?.WISUDA_KV;
+	const kv = platform?.env?.GUMURUH_KV;
 
 	// Semua user bisa akses beranda
 	// Admin: load full dashboard data
@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 		if (kv) {
 			try {
 				const storedUsers = (await kv.get('users', 'json')) as Record<string, KVUser> | null;
-				wisudawanPhotoEnabled = storedUsers?.['wisudawan']?.photo_enabled ?? false;
+				wisudawanPhotoEnabled = storedUsers?.['peserta']?.photo_enabled ?? false;
 			} catch {
 				wisudawanPhotoEnabled = false;
 			}

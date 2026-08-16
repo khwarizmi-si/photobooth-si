@@ -10,15 +10,15 @@ interface User {
 
 const DEFAULT_USERS: Record<string, User> = {
 	panitia: {
-		password: 'wisuda2026',
+		password: 'gumuruh2026',
 		role: 'admin',
-		name: 'Panitia Wisuda',
+		name: 'Panitia Gumuruh',
 		photo_enabled: true
 	},
-	wisudawan: {
-		password: 'wisuda2026',
+	peserta: {
+		password: 'gumuruh2026',
 		role: 'user',
-		name: 'Wisudawan',
+		name: 'Peserta',
 		photo_enabled: true
 	}
 };
@@ -38,7 +38,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'missing_credentials' });
 		}
 
-		const kv = platform?.env?.WISUDA_KV;
+		const kv = platform?.env?.GUMURUH_KV;
 		if (!kv) {
 			return fail(500, { error: 'server_error' });
 		}

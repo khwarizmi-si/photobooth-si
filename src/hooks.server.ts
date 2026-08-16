@@ -25,14 +25,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const sessionId = cookies.get('session_id');
 	event.locals.user = null;
 
-	if (sessionId && platform?.env?.WISUDA_KV) {
-		const sessionData = (await platform.env.WISUDA_KV.get(
+	if (sessionId && platform?.env?.GUMURUH_KV) {
+		const sessionData = (await platform.env.GUMURUH_KV.get(
 			`session_${sessionId}`,
 			'json'
 		)) as SessionData | null;
 
 		if (sessionData && sessionData.expires_at > Date.now()) {
-			const storedUsers = (await platform.env.WISUDA_KV.get('users', {
+			const storedUsers = (await platform.env.GUMURUH_KV.get('users', {
 				type: 'json'
 			})) as Record<string, StoredUser> | null;
 			const currentUser = storedUsers?.[sessionData.username];

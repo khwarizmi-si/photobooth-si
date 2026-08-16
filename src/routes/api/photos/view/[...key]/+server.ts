@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ params, platform }) => {
-	const bucket = platform?.env?.PHOTO_BUCKET;
+	const bucket = platform?.env?.GUMURUH_BUCKET;
 	if (!bucket) return new Response('R2 not configured', { status: 500 });
 
 	const key = params.key;

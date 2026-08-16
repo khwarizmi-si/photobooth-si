@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ platform, locals }) => {
-	const kv = platform?.env?.WISUDA_KV;
+	const kv = platform?.env?.GUMURUH_KV;
 	const photoCount = parseInt((await kv?.get('photo_count')) ?? '0');
 
 	// Get photos list dari KV
@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ platform, locals }) => {
 	const photos = (photosData as PhotoMetadata[]) ?? [];
 
 	// Get app URL for QR code
-	const appUrl = 'https://photobooth-wisuda-si.pages.dev';
+	const appUrl = platform?.env?.APP_URL ?? 'https://photobooth-gumuruh.pages.dev';
 
 	return {
 		user: locals.user,
