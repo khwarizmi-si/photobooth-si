@@ -78,7 +78,7 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-	console.log('\n=== WISUDA PHOTOBOOTH — Google OAuth Setup ===\n');
+	console.log('\n=== GUMURUH PHOTOBOOTH — Google OAuth Setup ===\n');
 	console.log('Membuka browser untuk login Google...\n');
 	exec(`open "${authUrl}"`);
 });

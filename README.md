@@ -1,43 +1,47 @@
-# sv
+# Photobooth Gumuruh
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Aplikasi web photobooth bertema merah-putih untuk perayaan HUT ke-81 Republik Indonesia di kampung Gumuruh.
 
-## Creating a project
+## Fitur
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Dashboard Admin** dengan kontrol penuh
+- **Dashboard User** (1 akun bersama) untuk semua peserta
+- **Galeri Public** menampilkan semua foto
+- **QR Code** untuk akses cepat ke galeri foto
+- **Penyimpanan ganda**: Foto asli (tanpa frame) + Foto hasil (dengan frame)
+- **Cloudflare R2** sebagai penyimpanan utama
+- **Frame Management**: Hanya admin yang bisa upload, pilih, dan hapus frame
 
-```sh
-# create a new project
-npx sv create my-app
-```
+## Tech Stack
 
-To recreate this project with the same configuration:
+- **Frontend**: Svelte 5 (Runes)
+- **Backend**: SvelteKit
+- **Hosting**: Cloudflare Pages
+- **Storage**: Cloudflare R2
+- **Database**: Cloudflare KV
+- **Styling**: Tailwind CSS
 
-```sh
-# recreate this project
-npx sv@0.16.1 create --template minimal --types ts --install npm .
-```
+## Credentials Default
+
+- **Admin**: username `panitia`, password `gumuruh2026`
+- **User**: username `peserta`, password `gumuruh2026`
+
+## Setup Cloudflare
+
+1. Buat project Pages baru: `photobooth-gumuruh`
+2. Buat bucket R2 baru untuk `GUMURUH_BUCKET`
+3. Buat KV namespace baru untuk `GUMURUH_KV`
+4. Update `wrangler.toml` dengan ID KV yang baru (ganti `REPLACE_WITH_YOUR_KV_ID`)
+5. Deploy dengan `wrangler pages deploy`
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
 ```sh
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
 ## Building
 
-To create a production version of your app:
-
 ```sh
 npm run build
 ```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-# photobooth-si
