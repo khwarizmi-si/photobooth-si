@@ -1,24 +1,25 @@
 @import 'tailwindcss';
 
 @theme {
-	--color-gold: #d4a843;
-	--color-gold-light: #f5d06b;
-	--color-gold-dark: #b8942e;
-	--color-gold-pale: #f8e8b0;
-	--color-black-deep: #0a0a0a;
+	--color-red: #dc2626;
+	--color-red-light: #f87171;
+	--color-red-dark: #b91c1c;
+	--color-red-pale: #fecaca;
+	--color-red-50: #fef2f2;
+	--color-white-deep: #fafafa;
 
 	--font-serif: 'Playfair Display', Georgia, serif;
 	--font-sans: 'Inter', system-ui, sans-serif;
 }
 
 :root {
-	color-scheme: dark;
+	color-scheme: light;
 }
 
 body {
 	font-family: var(--font-sans);
-	background-color: var(--color-black-deep);
-	color: #f5f5f5;
+	background-color: var(--color-white-deep);
+	color: #1f2937;
 }
 
 h1,
@@ -28,12 +29,12 @@ h3,
 	font-family: var(--font-serif);
 }
 
-/* Gold divider ornament */
+/* Red divider ornament */
 .ornament {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
-	color: var(--color-gold);
+	color: var(--color-red);
 }
 
 .ornament::before,
@@ -41,10 +42,10 @@ h3,
 	content: '';
 	flex: 1;
 	height: 1px;
-	background: linear-gradient(to right, transparent, var(--color-gold), transparent);
+	background: linear-gradient(to right, transparent, var(--color-red), transparent);
 }
 
-/* Gold shimmer animation */
+/* Red shimmer animation */
 @keyframes shimmer {
 	0% {
 		background-position: -200% center;
@@ -54,12 +55,12 @@ h3,
 	}
 }
 
-.gold-shimmer {
+.red-shimmer {
 	background: linear-gradient(
 		90deg,
-		var(--color-gold-dark) 0%,
-		var(--color-gold-light) 50%,
-		var(--color-gold-dark) 100%
+		var(--color-red-dark) 0%,
+		var(--color-red-light) 50%,
+		var(--color-red-dark) 100%
 	);
 	background-size: 200% auto;
 	-webkit-background-clip: text;
@@ -68,10 +69,10 @@ h3,
 	animation: shimmer 3s linear infinite;
 }
 
-/* Gold border glow */
-.border-gold {
-	border: 1px solid var(--color-gold);
-	box-shadow: 0 0 8px rgba(212, 168, 67, 0.2);
+/* Red border glow */
+.border-red {
+	border: 1px solid var(--color-red);
+	box-shadow: 0 0 8px rgba(220, 38, 38, 0.2);
 }
 
 /* Particle float animation */
@@ -128,14 +129,14 @@ h3,
 	animation: flash 0.6s ease-out forwards;
 }
 
-/* Pulse gold */
-@keyframes pulse-gold {
-	0%, 100% { box-shadow: 0 0 0 0 rgba(212, 168, 67, 0.4); }
-	50% { box-shadow: 0 0 0 12px rgba(212, 168, 67, 0); }
+/* Pulse red */
+@keyframes pulse-red {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+	50% { box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
 }
 
-.pulse-gold {
-	animation: pulse-gold 2s ease-in-out infinite;
+.pulse-red {
+	animation: pulse-red 2s ease-in-out infinite;
 }
 
 /* Spin slow */

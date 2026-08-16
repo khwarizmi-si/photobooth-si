@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
-	import { composePhotos, getFrameConfig } from '$lib/utils/canvas';
+	import { composePhotos, getFrameConfig, detectFrameSlotRatios } from '$lib/utils/canvas';
 	import type { PageData } from './$types';
 	import {
 		Camera,
@@ -51,7 +51,29 @@
 	const canTakePhoto = $derived(photoAccess);
 	const frameConfig = $derived(getFrameConfig(selectedFrameKey));
 	const numPhotos = $derived(frameConfig.numPhotos);
-	const SLOT_RATIO = $derived(frameConfig.cameraAspectRatio);
+	const DEFAULT_RATIO = $derived(frameConfig.cameraAspectRatio);
+
+	let slotRatios = $state<number[]>([]);
+	const currentSlotIndex = $derived(retakeIndex !== null ? retakeIndex : photos.length);
+	const currentSlotRatio = $derived(
+		slotRatios[currentSlotIndex] ?? slotRatios[0] ?? DEFAULT_RATIO
+	);
+
+	async function loadSlotRatios() {
+		if (!selectedFrameKey) {
+			slotRatios = [];
+			return;
+		}
+		try {
+			const ratios = await detectFrameSlotRatios(
+				`/api/frames/${selectedFrameKey}`,
+				numPhotos
+			);
+			if (ratios.length > 0) slotRatios = ratios;
+		} catch {
+			slotRatios = [];
+		}
+	}
 
 	async function refreshPhotoAccess() {
 		try {
@@ -75,7 +97,6 @@
 			}
 
 			if (photoAccess && !wasEnabled && stage === 'idle') {
-				// Fetch active frame karena saat page load akses mungkin OFF (activeFrame null)
 				try {
 					const fr = await fetch('/api/frames/active');
 					const fj = (await fr.json()) as { active?: string | null };
@@ -96,8 +117,8 @@
 			stream = await navigator.mediaDevices.getUserMedia({
 				video: {
 					width: { ideal: 1280 },
-					height: { ideal: Math.round(1280 / SLOT_RATIO) },
-					aspectRatio: { ideal: SLOT_RATIO },
+					height: { ideal: Math.round(1280 / currentSlotRatio) },
+					aspectRatio: { ideal: currentSlotRatio },
 					facingMode
 				},
 				audio: false
@@ -129,8 +150,8 @@
 		const vh = videoEl!.videoHeight || 720;
 		let sw = vw,
 			sh = vh;
-		if (vw / vh > SLOT_RATIO) sw = vh * SLOT_RATIO;
-		else sh = vw / SLOT_RATIO;
+		if (vw / vh > currentSlotRatio) sw = vh * currentSlotRatio;
+		else sh = vw / currentSlotRatio;
 		const canvas = document.createElement('canvas');
 		canvas.width = Math.round(sw);
 		canvas.height = Math.round(sh);
@@ -245,7 +266,7 @@
 		const ts = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
 		const a = document.createElement('a');
 		a.href = resultImage;
-		a.download = `wisuda_${ts}.jpg`;
+		a.download = `gumuruh_${ts}.jpg`;
 		a.click();
 	}
 
@@ -292,19 +313,36 @@
 		startCamera();
 	}
 
-	// Auto-start kamera saat halaman dibuka
 	$effect(() => {
 		if (canTakePhoto) startCamera();
 	});
 
-	// Hanya stop kamera di stage yang tidak butuh kamera
+	$effect(() => {
+		loadSlotRatios();
+	});
+
+	let prevSlotRatio = $state(0);
+	$effect(() => {
+		if (
+			cameraReady &&
+			prevSlotRatio !== 0 &&
+			currentSlotRatio !== prevSlotRatio &&
+			Math.abs(currentSlotRatio - prevSlotRatio) > 0.05
+		) {
+			prevSlotRatio = currentSlotRatio;
+			stopCamera();
+			startCamera();
+		} else {
+			prevSlotRatio = currentSlotRatio;
+		}
+	});
+
 	$effect(() => {
 		if (stage === 'result' || stage === 'composing') {
 			stopCamera();
 		}
 	});
 
-	// Cleanup saat komponen di-unmount (tidak ikut re-run saat stage berubah)
 	$effect(() => () => stopCamera());
 
 	onMount(() => {
@@ -315,23 +353,23 @@
 </script>
 
 <svelte:head>
-	<title>Ambil Foto — Wisuda Photobooth</title>
+	<title>Ambil Foto — Gumuruh Photobooth</title>
 </svelte:head>
 
-<div class="min-h-screen flex flex-col" style="background: #0a0a0a;">
+<div class="min-h-screen flex flex-col" style="background: #fafafa;">
 	<header
 		class="flex items-center justify-between px-6 py-4 shrink-0"
-		style="border-bottom: 1px solid rgba(212,168,67,0.15);"
+		style="border-bottom: 1px solid rgba(220, 38, 38, 0.15); background: #ffffff;"
 	>
-		<a href="/" class="text-sm" style="color: #d4a843;">← Dashboard</a>
-		<h1 class="text-sm font-serif font-semibold flex items-center gap-2" style="color: #d4a843;">
-			<Camera style="width: 1rem; height: 1rem;" /> Foto Wisuda
+		<a href="/" class="text-sm" style="color: #dc2626;">← Dashboard</a>
+		<h1 class="text-sm font-serif font-semibold flex items-center gap-2" style="color: #b91c1c;">
+			<Camera style="width: 1rem; height: 1rem;" /> Foto Gumuruh
 		</h1>
 		<div class="flex gap-1.5">
 			{#each { length: numPhotos } as _, i}
 				<div
 					class="w-2 h-2 rounded-full transition-all duration-300"
-					style="background: {photos[i] ? '#d4a843' : 'rgba(212,168,67,0.2)'};"
+					style="background: {photos[i] ? '#dc2626' : 'rgba(220, 38, 38, 0.2)'};"
 				></div>
 			{/each}
 		</div>
@@ -348,11 +386,11 @@
 				>
 					<Ban style="color: #ef4444; width: 2.5rem; height: 2.5rem;" />
 				</div>
-				<h2 class="text-xl font-serif font-bold mb-2" style="color: #f8e8b0;">Fitur Dinonaktifkan</h2>
-				<p class="text-sm mb-4" style="color: #6a6a6a;">
+				<h2 class="text-xl font-serif font-bold mb-2" style="color: #1f2937;">Fitur Dinonaktifkan</h2>
+				<p class="text-sm mb-4" style="color: #6b7280;">
 					Admin telah menonaktifkan fitur foto untuk user.
 				</p>
-				<a href="/" class="inline-block mt-6 px-6 py-2 rounded-lg text-sm" style="color: #d4a843; border: 1px solid rgba(212,168,67,0.3);">
+				<a href="/" class="inline-block mt-6 px-6 py-2 rounded-lg text-sm" style="color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.3);">
 					Kembali ke Dashboard
 				</a>
 			</div>
@@ -362,24 +400,24 @@
 			<div class="w-full max-w-xs text-center">
 				<div
 					class="mb-4 p-3 rounded-lg"
-					style="background: rgba(134, 239, 172, 0.1); border: 1px solid rgba(134, 239, 172, 0.2);"
+					style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.2);"
 				>
-					<p class="text-sm font-medium flex items-center justify-center gap-2" style="color: #86efac;">
+					<p class="text-sm font-medium flex items-center justify-center gap-2" style="color: #dc2626;">
 						<CheckCircle style="width: 1rem; height: 1rem;" /> Foto Berhasil
 					</p>
-					<p class="text-xs mt-1" style="color: #6a6a6a;">
+					<p class="text-xs mt-1" style="color: #6b7280;">
 						Foto asli + foto dengan frame tersimpan di galeri
 					</p>
 				</div>
 
-				<div class="rounded-2xl overflow-hidden mb-4 shadow-2xl" style="border: 2px solid rgba(212,168,67,0.4);">
-					<img src={resultImage} alt="Hasil foto wisuda" class="w-full" />
+				<div class="rounded-2xl overflow-hidden mb-4 shadow-2xl" style="border: 2px solid rgba(220, 38, 38, 0.4);">
+					<img src={resultImage} alt="Hasil foto gumuruh" class="w-full" />
 				</div>
 				<div class="grid grid-cols-2 gap-3 mb-3">
 					<button
 						onclick={downloadPhoto}
 						class="py-3 rounded-xl text-sm font-semibold transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-						style="background: linear-gradient(135deg, #d4a843, #b8942e); color: #0a0a0a;"
+						style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: #ffffff;"
 					>
 						<Download style="width: 1rem; height: 1rem;" /> Download
 					</button>
@@ -387,7 +425,7 @@
 						onclick={uploadToR2}
 						disabled={uploadStatus === 'uploading' || uploadStatus === 'success'}
 						class="py-3 rounded-xl text-sm font-semibold transition-all hover:scale-105 active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
-						style="border: 1.5px solid rgba(212,168,67,0.3); color: #d4a843;"
+						style="border: 1.5px solid rgba(220, 38, 38, 0.3); color: #dc2626;"
 					>
 						{#if uploadStatus === 'uploading'}
 							<Loader2 style="width: 1rem; height: 1rem;" class="animate-spin" />
@@ -408,17 +446,17 @@
 					</button>
 				</div>
 				{#if uploadProgress}
-					<p class="text-xs mb-2" style="color: #6a6a6a;">{uploadProgress}</p>
+					<p class="text-xs mb-2" style="color: #6b7280;">{uploadProgress}</p>
 				{/if}
 				{#if uploadStatus === 'success'}
-					<p class="text-xs mb-3 flex items-center justify-center gap-1" style="color: #86efac;">
+					<p class="text-xs mb-3 flex items-center justify-center gap-1" style="color: #dc2626;">
 						<CheckCircle style="width: 0.875rem; height: 0.875rem;" /> Foto berhasil diupload ke galeri!
 					</p>
 				{/if}
 				<button
 					onclick={reset}
 					class="w-full py-2 rounded-xl text-xs flex items-center justify-center gap-2"
-					style="color: #4a4a4a;"
+					style="color: #6b7280;"
 				>
 					<RotateCcw style="width: 0.875rem; height: 0.875rem;" /> Sesi Baru
 				</button>
@@ -427,38 +465,38 @@
 		<!-- COMPOSING -->
 		{:else if stage === 'composing'}
 			<div class="text-center">
-				<div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="border: 2px solid rgba(212,168,67,0.3);">
-					<div class="w-8 h-8 rounded-full border-2 border-transparent spin-slow" style="border-top-color: #d4a843;"></div>
+				<div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="border: 2px solid rgba(220, 38, 38, 0.3);">
+					<div class="w-8 h-8 rounded-full border-2 border-transparent spin-slow" style="border-top-color: #dc2626;"></div>
 				</div>
-				<p class="text-sm font-serif" style="color: #f8e8b0;">Memproses foto...</p>
-				<p class="text-xs mt-2" style="color: #6a6a6a;">Menggabungkan foto dengan frame</p>
+				<p class="text-sm font-serif" style="color: #1f2937;">Memproses foto...</p>
+				<p class="text-xs mt-2" style="color: #6b7280;">Menggabungkan foto dengan frame</p>
 			</div>
 
 		<!-- ERROR -->
 		{:else if stage === 'error'}
 			<div class="text-center">
-				<p class="mb-4" style="color: #fca5a5;">{errorMsg}</p>
-				<button onclick={reset} class="px-6 py-2 rounded-lg text-sm" style="color: #d4a843; border: 1px solid rgba(212,168,67,0.3);">
+				<p class="mb-4" style="color: #ef4444;">{errorMsg}</p>
+				<button onclick={reset} class="px-6 py-2 rounded-lg text-sm" style="color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.3);">
 					Coba lagi
 				</button>
 			</div>
 
 		<!-- REVIEW -->
 		{:else if stage === 'review'}
-			<p class="text-xs tracking-widest" style="color: #6a6a6a;">CEK FOTO</p>
+			<p class="text-xs tracking-widest" style="color: #6b7280;">CEK FOTO</p>
 			<div class="flex gap-3">
 				{#each photos as photo, i}
 					<div class="flex flex-col items-center gap-2">
 						<div
 							class="relative rounded-xl overflow-hidden"
-							style="width: 100px; aspect-ratio: {frameConfig.cameraAspectRatio}; border: 1.5px solid rgba(212,168,67,0.4);"
+							style="width: 100px; aspect-ratio: {slotRatios[i] ?? DEFAULT_RATIO}; border: 1.5px solid rgba(220, 38, 38, 0.4);"
 						>
 							<img src={photo} alt="Foto {i + 1}" class="w-full h-full object-cover" />
 						</div>
 						<button
 							onclick={() => startRetake(i)}
 							class="px-3 py-1 rounded-lg text-xs transition-all hover:scale-105"
-							style="border: 1px solid rgba(212,168,67,0.25); color: #b8942e;"
+							style="border: 1px solid rgba(220, 38, 38, 0.25); color: #b91c1c;"
 						>
 							Retake
 						</button>
@@ -469,14 +507,14 @@
 				<button
 					onclick={compose}
 					class="w-full py-3 rounded-xl font-semibold text-sm transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-					style="background: linear-gradient(135deg, #d4a843, #b8942e); color: #0a0a0a; box-shadow: 0 4px 20px rgba(212,168,67,0.3);"
+					style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: #ffffff; box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);"
 				>
 					<Sparkles style="width: 1rem; height: 1rem;" /> Buat Foto
 				</button>
 				<button
 					onclick={reset}
 					class="w-full py-2 rounded-xl text-xs flex items-center justify-center gap-2"
-					style="color: #4a4a4a;"
+					style="color: #6b7280;"
 				>
 					<RotateCcw style="width: 0.875rem; height: 0.875rem;" /> Ulang Semua
 				</button>
@@ -486,8 +524,8 @@
 		{:else}
 			{#if cameraError}
 				<div class="text-center">
-					<p class="text-sm mb-4" style="color: #fca5a5;">{cameraError}</p>
-					<button onclick={startCamera} class="px-6 py-2 rounded-lg text-sm" style="color: #d4a843; border: 1px solid rgba(212,168,67,0.3);">
+					<p class="text-sm mb-4" style="color: #ef4444;">{cameraError}</p>
+					<button onclick={startCamera} class="px-6 py-2 rounded-lg text-sm" style="color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.3);">
 						Coba Lagi
 					</button>
 				</div>
@@ -495,7 +533,7 @@
 				<!-- Preview -->
 				<div
 					class="relative w-full max-w-xl rounded-2xl overflow-hidden"
-					style="aspect-ratio: {SLOT_RATIO}; border: 1.5px solid rgba(212,168,67,0.2); max-height: 70vh;"
+					style="aspect-ratio: {currentSlotRatio}; border: 1.5px solid rgba(220, 38, 38, 0.2); max-height: 70vh; background: #fef2f2;"
 				>
 					<video
 						bind:this={videoEl}
@@ -511,7 +549,7 @@
 						<button
 							onclick={switchCamera}
 							class="absolute top-3 right-3 p-2 rounded-full transition-all hover:scale-110 active:scale-95"
-							style="background: rgba(0,0,0,0.5); color: #d4a843; border: 1px solid rgba(212,168,67,0.3);"
+							style="background: rgba(255,255,255,0.9); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.3);"
 							title="Ganti kamera"
 						>
 							<SwitchCamera style="width: 1.25rem; height: 1.25rem;" />
@@ -519,11 +557,11 @@
 					{/if}
 
 					{#if stage === 'countdown' || stage === 'retaking'}
-						<div class="absolute inset-0 flex flex-col items-center justify-center" style="background: rgba(0,0,0,0.5);">
+						<div class="absolute inset-0 flex flex-col items-center justify-center" style="background: rgba(255,255,255,0.7);">
 							{#key countdownKey}
 								<div
 									class="countdown-number font-bold font-serif"
-									style="font-size: clamp(80px, 20vw, 140px); color: #d4a843; text-shadow: 0 0 60px rgba(212,168,67,0.8);"
+									style="font-size: clamp(80px, 20vw, 140px); color: #dc2626; text-shadow: 0 0 60px rgba(220, 38, 38, 0.5);"
 								>
 									{countdown}
 								</div>
@@ -536,8 +574,8 @@
 					{/if}
 
 					{#if !cameraReady && !cameraError}
-						<div class="absolute inset-0 flex items-center justify-center" style="background: rgba(0,0,0,0.85);">
-							<div class="w-6 h-6 rounded-full border-2 border-transparent spin-slow" style="border-top-color: #d4a843;"></div>
+						<div class="absolute inset-0 flex items-center justify-center" style="background: rgba(255,255,255,0.85);">
+							<div class="w-6 h-6 rounded-full border-2 border-transparent spin-slow" style="border-top-color: #dc2626;"></div>
 						</div>
 					{/if}
 				</div>
@@ -549,17 +587,17 @@
 							<div class="flex flex-col items-center gap-1">
 								<div
 									class="relative rounded-lg overflow-hidden"
-									style="width: 60px; aspect-ratio: {SLOT_RATIO}; border: 1px solid #d4a843;"
+									style="width: 60px; aspect-ratio: {slotRatios[i] ?? DEFAULT_RATIO}; border: 1px solid #dc2626;"
 								>
 									<img src={photo} alt="Foto {i + 1}" class="w-full h-full object-cover" />
 									{#if stage === 'idle' && cameraReady}
 										<button
 											onclick={() => startRetake(i)}
 											class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
-											style="background: rgba(0,0,0,0.6);"
+											style="background: rgba(255,255,255,0.8);"
 											title="Retake foto {i + 1}"
 										>
-											<RotateCcw style="width: 1rem; height: 1rem; color: #d4a843;" />
+											<RotateCcw style="width: 1rem; height: 1rem; color: #dc2626;" />
 										</button>
 									{/if}
 								</div>
@@ -567,17 +605,17 @@
 									<button
 										onclick={() => startRetake(i)}
 										class="text-xs transition-colors hover:opacity-80"
-										style="color: #b8942e;"
+										style="color: #b91c1c;"
 									>
 										retake
 									</button>
 								{/if}
 							</div>
 						{/each}
-						{#each { length: numPhotos - photos.length } as _}
+						{#each { length: numPhotos - photos.length } as _, j}
 							<div
 								class="rounded-lg"
-								style="width: 60px; aspect-ratio: {SLOT_RATIO}; border: 1px solid rgba(212,168,67,0.15);"
+								style="width: 60px; aspect-ratio: {slotRatios[photos.length + j] ?? DEFAULT_RATIO}; border: 1px solid rgba(220, 38, 38, 0.15); background: #fef2f2;"
 							></div>
 						{/each}
 					</div>
@@ -587,8 +625,8 @@
 				<button
 					onclick={takePhoto}
 					disabled={!cameraReady || stage === 'countdown'}
-					class="px-12 py-4 rounded-full font-semibold text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-40 pulse-gold flex items-center justify-center gap-2"
-					style="background: linear-gradient(135deg, #d4a843, #b8942e); color: #0a0a0a; box-shadow: 0 6px 24px rgba(212,168,67,0.35);"
+					class="px-12 py-4 rounded-full font-semibold text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-40 pulse-red flex items-center justify-center gap-2"
+					style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: #ffffff; box-shadow: 0 6px 24px rgba(220, 38, 38, 0.35);"
 				>
 					<Camera style="width: 1.125rem; height: 1.125rem;" /> Foto {photos.length + 1} / {numPhotos}
 				</button>
@@ -597,7 +635,7 @@
 					<button
 						onclick={reset}
 						class="text-xs flex items-center justify-center gap-1"
-						style="color: #3a3a3a;"
+						style="color: #6b7280;"
 					>
 						<RotateCcw style="width: 0.75rem; height: 0.75rem;" /> Ulang Semua
 					</button>
